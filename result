@@ -1,0 +1,82 @@
+Computing Pearson correlations …
+
+Pearson r — Departure delay:
+temperature     0.087386
+wind_speed      0.060003
+pressure_hpa   -0.042729
+snowfall_mm     0.037041
+wind_gust       0.033866
+precip_mm       0.017116
+cape            0.013736
+dewpoint        0.011025
+low_cloud       0.009796
+cloud_base_m    0.008728
+
+Pearson r — Arrival delay:
+temperature     0.080434
+wind_speed      0.058763
+pressure_hpa   -0.033626
+wind_gust       0.032652
+snowfall_mm     0.028335
+cloud_base_m    0.021305
+precip_mm       0.012213
+cape            0.011289
+dewpoint        0.006279
+low_cloud       0.002436
+
+============================================================
+CORRELATION WITH DEPARTURE DELAY  (Pearson r)
+============================================================
+  temperature         +0.0874  ███
+  wind_speed          +0.0600  ██
+  pressure_hpa        -0.0427  █
+  snowfall_mm         +0.0370  █
+  wind_gust           +0.0339  █
+  precip_mm           +0.0171
+  cape                +0.0137
+  dewpoint            +0.0110
+  low_cloud           +0.0098
+  cloud_base_m        +0.0087
+
+============================================================
+CORRELATION WITH ARRIVAL DELAY  (Pearson r)
+============================================================
+  temperature         +0.0804  ███
+  wind_speed          +0.0588  ██
+  pressure_hpa        -0.0336  █
+  wind_gust           +0.0327  █
+  snowfall_mm         +0.0283  █
+  cloud_base_m        +0.0213
+  precip_mm           +0.0122
+  cape                +0.0113
+  dewpoint            +0.0063
+  low_cloud           +0.0024
+
+============================================================
+FULL CORRELATION MATRIX
+============================================================
+               wind_speed  temperature  dewpoint  pressure_hpa  low_cloud   cape  precip_mm  snowfall_mm  wind_gust  cloud_base_m  DEP_DELAY_MIN  ARR_DELAY_MIN
+wind_speed          1.000        0.206     0.254        -0.174      0.169  0.073      0.108        0.023      0.880        -0.218          0.060          0.059
+temperature         0.206        1.000     0.624        -0.144     -0.087  0.081     -0.001       -0.170      0.171         0.014          0.087          0.080
+dewpoint            0.254        0.624     1.000        -0.239      0.250  0.209      0.188       -0.090      0.145        -0.386          0.011          0.006
+pressure_hpa       -0.174       -0.144    -0.239         1.000     -0.177 -0.226     -0.251       -0.086     -0.207         0.305         -0.043         -0.034
+low_cloud           0.169       -0.087     0.250        -0.177      1.000  0.147      0.304        0.135      0.195        -0.601          0.010          0.002
+cape                0.073        0.081     0.209        -0.226      0.147  1.000      0.332        0.035      0.115        -0.199          0.014          0.011
+precip_mm           0.108       -0.001     0.188        -0.251      0.304  0.332      1.000        0.268      0.177        -0.236          0.017          0.012
+snowfall_mm         0.023       -0.170    -0.090        -0.086      0.135  0.035      0.268        1.000      0.076        -0.103          0.037          0.028
+wind_gust           0.880        0.171     0.145        -0.207      0.195  0.115      0.177        0.076      1.000        -0.237          0.034          0.033
+cloud_base_m       -0.218        0.014    -0.386         0.305     -0.601 -0.199     -0.236       -0.103     -0.237         1.000          0.009          0.021
+DEP_DELAY_MIN       0.060        0.087     0.011        -0.043      0.010  0.014      0.017        0.037      0.034         0.009          1.000          0.811
+ARR_DELAY_MIN       0.059        0.080     0.006        -0.034      0.002  0.011      0.012        0.028      0.033         0.021          0.811          1.000
+
+============================================================
+TOP 5 CORRELATES WITH DEPARTURE DELAY
+============================================================
+  temperature         r = +0.0874  → longer delay
+  wind_speed          r = +0.0600  → longer delay
+  pressure_hpa        r = -0.0427  → shorter delay
+  snowfall_mm         r = +0.0370  → longer delay
+  wind_gust           r = +0.0339  → longer delay
+============================================================
+
+Done.
