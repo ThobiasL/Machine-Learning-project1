@@ -12,12 +12,13 @@ train, validation = train_test_split(trainvalidation, test_size=0.25)
 
 # Removing the target columns from the features and creating separate target datasets
 target = ["DEP_DELAY_MIN", "ARR_DELAY_MIN"]
+target_index = [18,19]
 train_features = train.drop(train.columns[target], axis=1)
-train_target = train[target]
+train_target = train[target_index]
 validation_features = validation.drop(validation.columns[target], axis=1)
-validation_target = validation[target]
+validation_target = validation[target_index]
 test_features = test.drop(test.columns[target], axis=1)
-test_target = test[target]
+test_target = test[target_index]
 
 # Evaluation module and printing results
 def evaluate(regressor, features, targets):
