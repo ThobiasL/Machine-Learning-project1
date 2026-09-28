@@ -11,18 +11,18 @@ from collections import defaultdict
 import warnings
 warnings.filterwarnings("ignore")
 
-WEATHER_DIR = r"C:\Users\Gruppe3\Desktop\project1\dataset\weather"
+WEATHER_DIR = r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\dataset\weather"
 HOURLY_NC   = rf"{WEATHER_DIR}\weather_hourly.nc"
 ACCUM_NC    = rf"{WEATHER_DIR}\weather_accum.nc"
 
 FLIGHT_FILES = [
-    r"C:\Users\Gruppe3\Desktop\project1\dataset\Flights_20220101_20221231.csv",
-    r"C:\Users\Gruppe3\Desktop\project1\dataset\Flights_20210101_20211231.csv",
-    r"C:\Users\Gruppe3\Desktop\project1\dataset\Flights_20200101_20201231.csv",
-    r"C:\Users\Gruppe3\Desktop\project1\dataset\Flights_20190101_20191231.csv",
+    r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\dataset\flights\Flights_20220101_20221231.csv",
+    r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\dataset\flights\Flights_20210101_20211231.csv",
+    r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\dataset\flights\Flights_20200101_20201231.csv",
+    r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\dataset\flights\Flights_20190101_20191231.csv",
 ]
 
-OUTPUT_PATH = r"C:\Users\Gruppe3\Desktop\project1\dataset\flights_weather_dataset.csv"
+OUTPUT_PATH = r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\dataset\flights_weather_dataset.csv"
 
 
 def _find_var(nc, *candidates):
