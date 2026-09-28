@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 dataset = pd.read_csv(r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\dataset\flights_weather_dataset.csv")
@@ -38,12 +38,12 @@ def validate(regressor):
     print('Validation results:')
     evaluate(regressor, validation_features, validation_target)
 
-lr = LinearRegression()
-lr.fit(train_features, train_target)
+dt = DecisionTreeRegressor()
+dt.fit(train_features, train_target)
 
 print("Training results:")
-validate(lr)
+validate(dt)
 
 print("-"*30)
 print("Testing results:")
-evaluate(lr, test_features, test_target)
+evaluate(dt, test_features, test_target)
