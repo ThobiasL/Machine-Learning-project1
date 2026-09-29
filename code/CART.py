@@ -10,9 +10,14 @@ dataset = pd.read_csv(r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\datas
 object_list = [["FILED OFF BLOCK TIME", "FILED ARRIVAL TIME", "ACTUAL OFF BLOCK TIME", "ACTUAL ARRIVAL TIME"],
                ["ADEP", "ADES", "AC Type", "AC Operator", "AC Registration", "ICAO Flight Type", "STATFOR Market Segment"]]
 
-# Converting the datetime columns in to integer format
-dataset[object_list[0]] = pd.to_datetime(dataset[object_list[0]], format='%Y-%m-%d %H:%M:%S', errors='coerce')
-dataset[object_list[0]] = dataset[object_list[0]].astype(np.int64) // 10**9
+# Converting the datetime object columns into datetime format
+for col in object_list[0]:
+    dataset[col] = pd.to_datetime(dataset[col], format="%Y-%m-%d %H:%M:%S", errors="coerce")
+    dataset[f"{col}_hour"] = dataset[col].dt.hour
+    dataset[f"{col}_dayofweek"] = dataset[col].dt.dayofweek
+    dataset[f"{col}_month"] = dataset[col].dt.month
+
+# Converting the datetime format columns into int format
 
 print(dataset.info())
 
