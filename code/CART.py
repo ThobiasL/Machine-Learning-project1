@@ -10,8 +10,8 @@ dataset = pd.read_csv(r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\datas
 object_list = [["FILED OFF BLOCK TIME", "FILED ARRIVAL TIME", "ACTUAL OFF BLOCK TIME", "ACTUAL ARRIVAL TIME"],
                ["ADEP", "ADES", "AC Type", "AC Operator", "AC Registration", "ICAO Flight Type", "STATFOR Market Segment"]]
 
-# Dropping the index column
-dataset = dataset.drop(columns=["ECTRL ID"], axis=1)
+# Dropping the unneeded columns
+dataset = dataset.drop(columns=["ECTRL ID", "AC Registration"], axis=1)
 
 # Converting the datetime object columns into different int columns
 for col in object_list[0]:
