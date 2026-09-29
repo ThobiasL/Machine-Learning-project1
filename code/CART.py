@@ -10,8 +10,11 @@ dataset = pd.read_csv(r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\datas
 object_list = [["FILED OFF BLOCK TIME", "FILED ARRIVAL TIME", "ACTUAL OFF BLOCK TIME", "ACTUAL ARRIVAL TIME"],
                ["ADEP", "ADES", "AC Type", "AC Operator", "AC Registration", "ICAO Flight Type", "STATFOR Market Segment"]]
 
-dataset = dataset[object_list[0]].astype("int64")
-print(dataset.head())
+# Converting the datetime columns in to integer format
+dataset[object_list[0]] = pd.to_datetime(dataset[object_list[0]], format='%Y-%m-%d %H:%M:%S', errors='coerce')
+dataset[object_list[0]] = dataset[object_list[0]].astype(np.int64) // 10**9
+
+print(dataset.info())
 
 # Splitting the dataset into train 60%, validation 20%, and test 20%
 trainvalidation, test = train_test_split(dataset, test_size=0.2)
