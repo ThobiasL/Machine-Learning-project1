@@ -1,7 +1,7 @@
 """
 build_new_dataset.py
 
-Merges flight CSV files with ERA5 weather.
+Merges flight CSV files with ERA5 weather at both departure (ADEP) and arrival (ADES).
 """
 
 import netCDF4 as nc4
@@ -16,10 +16,10 @@ HOURLY_NC   = rf"{WEATHER_DIR}\weather_hourly.nc"
 ACCUM_NC    = rf"{WEATHER_DIR}\weather_accum.nc"
 
 FLIGHT_FILES = [
-    r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\dataset\flights\Flights_20220101_20221231.csv",
-    r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\dataset\flights\Flights_20210101_20211231.csv",
-    r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\dataset\flights\Flights_20200101_20201231.csv",
-    r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\dataset\flights\Flights_20190101_20191231.csv",
+    r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\dataset\flights\Flights_20220301_20220331.csv",
+    r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\dataset\flights\Flights_20220601_20220630.csv",
+    r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\dataset\flights\Flights_20220901_20220930.csv",
+    r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\dataset\flights\Flights_20221201_20221231.csv",
 ]
 
 OUTPUT_PATH = r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\dataset\flights_weather_dataset.csv"
@@ -93,15 +93,19 @@ if "ACTUAL ARRIVAL TIME" in flights.columns and "FILED ARRIVAL TIME" in flights.
         flights["ACTUAL ARRIVAL TIME"] - flights["FILED ARRIVAL TIME"]
     ).dt.total_seconds() / 60
 
-# Keep only rows where we can do a weather lookup
+# Keep only rows where we can do a departure weather lookup
+# (arrival weather is filled where available, NaN otherwise)
 req = [c for c in ["ADEP", "ADEP Latitude", "ADEP Longitude", "ACTUAL OFF BLOCK TIME"]
        if c in flights.columns]
 flights = flights.dropna(subset=req)
 
-# Round departure time to nearest hour for weather lookup
+# Round times to the hour for weather lookup
 flights["DEP_HOUR"] = flights["ACTUAL OFF BLOCK TIME"].dt.floor("h")
+flights["ARR_HOUR"] = flights["ACTUAL ARRIVAL TIME"].dt.floor("h")
 
 print(f"  Rows with valid departure info: {len(flights):,}")
+print(f"  Rows with valid arrival info:   "
+      f"{flights[['ADES', 'ADES Latitude', 'ADES Longitude', 'ARR_HOUR']].notna().all(axis=1).sum():,}")
 
 
 
@@ -116,7 +120,6 @@ a_times      = _nc_times(nc_a)
 
 h_lat_name = _find_var(nc_h, "latitude", "lat")
 a_lat_name = _find_var(nc_a, "latitude", "lat")
-h_lon_name = _find_var(nc_h, "longitude", "lon")   # used only in diagnostics
 
 print(f"  Hourly: {len(h_times)} steps  |  lat {h_lat.min():.0f}→{h_lat.max():.0f}  "
       f"lon {h_lon.min():.0f}→{h_lon.max():.0f}")
@@ -126,44 +129,51 @@ print(f"  Accum : {len(a_times)} steps  |  lat {a_lat.min():.0f}→{a_lat.max():
 
 
 print("\nExtracting weather per airport …")
+# Airport table: union of departure and arrival airports
+AP_COLS = ["ICAO", "LAT", "LON"]
+dep_ap = flights[["ADEP", "ADEP Latitude", "ADEP Longitude"]].set_axis(AP_COLS, axis=1)
+arr_ap = flights[["ADES", "ADES Latitude", "ADES Longitude"]].set_axis(AP_COLS, axis=1)
 unique_airports = (
-    flights[["ADEP", "ADEP Latitude", "ADEP Longitude"]]
-    .drop_duplicates("ADEP")
+    pd.concat([dep_ap, arr_ap], ignore_index=True)
+    .dropna()
+    .drop_duplicates("ICAO")
     .reset_index(drop=True)
 )
-print(f"  Unique airports: {len(unique_airports)}")
+print(f"  Unique airports (dep + arr): {len(unique_airports)}")
+
+# Drop airports outside the weather grid; their flights get NaN weather
+in_grid = (
+    unique_airports["LAT"].between(max(h_lat.min(), a_lat.min()), min(h_lat.max(), a_lat.max()))
+    & unique_airports["LON"].between(max(h_lon.min(), a_lon.min()), min(h_lon.max(), a_lon.max()))
+)
+oob = int((~in_grid).sum())
+unique_airports = unique_airports[in_grid].reset_index(drop=True)
+if oob:
+    print(f"  {oob} airports outside the weather grid extent — no weather assigned")
 
 # Nearest grid indices for each airport
 h_li, h_lj, a_li, a_lj = {}, {}, {}, {}
-oob = 0
 for _, row in unique_airports.iterrows():
-    adep = row["ADEP"]
-    lat  = float(row["ADEP Latitude"])
-    lon  = float(row["ADEP Longitude"])
-    # Warn if airport is outside the weather grid
-    if not (h_lat.min() <= lat <= h_lat.max() and h_lon.min() <= lon <= h_lon.max()):
-        oob += 1
-    h_li[adep] = int(np.argmin(np.abs(h_lat - lat)))
-    h_lj[adep] = int(np.argmin(np.abs(h_lon - lon)))
-    a_li[adep] = int(np.argmin(np.abs(a_lat - lat)))
-    a_lj[adep] = int(np.argmin(np.abs(a_lon - lon)))
-
-if oob:
-    print(f"  WARNING: {oob} airports outside the weather grid extent "
-          f"(nearest point used — values may be inaccurate)")
+    icao = row["ICAO"]
+    lat  = float(row["LAT"])
+    lon  = float(row["LON"])
+    h_li[icao] = int(np.argmin(np.abs(h_lat - lat)))
+    h_lj[icao] = int(np.argmin(np.abs(h_lon - lon)))
+    a_li[icao] = int(np.argmin(np.abs(a_lat - lat)))
+    a_lj[icao] = int(np.argmin(np.abs(a_lon - lon)))
 
 # Group airports by latitude index to minimise file seeks
 h_by_lat = defaultdict(list)
 a_by_lat = defaultdict(list)
-for adep in unique_airports["ADEP"]:
-    h_by_lat[h_li[adep]].append(adep)
-    a_by_lat[a_li[adep]].append(adep)
+for icao in unique_airports["ICAO"]:
+    h_by_lat[h_li[icao]].append(icao)
+    a_by_lat[a_li[icao]].append(icao)
 
 H_VARS = ["u10", "v10", "t2m", "d2m", "msl", "lcc", "cape"]
 A_VARS = ["tp",  "sf",  "fg10", "cbh"]
 
-raw_h = {adep: {} for adep in unique_airports["ADEP"]}
-raw_a = {adep: {} for adep in unique_airports["ADEP"]}
+raw_h = {icao: {} for icao in unique_airports["ICAO"]}
+raw_a = {icao: {} for icao in unique_airports["ICAO"]}
 
 total = len(h_by_lat) * len(H_VARS) + len(a_by_lat) * len(A_VARS)
 done  = 0
@@ -174,8 +184,8 @@ for varname in H_VARS:
         print(f"    skip {varname} (not in file)"); continue
     for lat_i, airports in h_by_lat.items():
         strip = read_lat_strip(nc_h, varname, h_lat_name, lat_i)
-        for adep in airports:
-            raw_h[adep][varname] = strip[:, h_lj[adep]]
+        for icao in airports:
+            raw_h[icao][varname] = strip[:, h_lj[icao]]
         done += 1
         if done % 100 == 0:
             print(f"    {done}/{total} …", flush=True)
@@ -186,8 +196,8 @@ for varname in A_VARS:
         print(f"    skip {varname} (not in file)"); continue
     for lat_i, airports in a_by_lat.items():
         strip = read_lat_strip(nc_a, varname, a_lat_name, lat_i)
-        for adep in airports:
-            raw_a[adep][varname] = strip[:, a_lj[adep]]
+        for icao in airports:
+            raw_a[icao][varname] = strip[:, a_lj[icao]]
         done += 1
         if done % 100 == 0:
             print(f"    {done}/{total} …", flush=True)
@@ -195,17 +205,23 @@ for varname in A_VARS:
 nc_h.close()
 nc_a.close()
 
+WEATHER_COLS = [
+    "wind_speed_ms", "temperature_c", "dewpoint_c", "pressure_hpa",
+    "low_cloud_frac", "cape_jkg", "precip_mm", "snowfall_mm",
+    "wind_gust_ms", "cloud_base_m",
+]
+
 # Build per-airport lookup DataFrames (indexed by hour)
 airport_wx = {}
-for adep in unique_airports["ADEP"]:
+for icao in unique_airports["ICAO"]:
     try:
-        u10  = raw_h[adep].get("u10",  np.zeros(len(h_times)))
-        v10  = raw_h[adep].get("v10",  np.zeros(len(h_times)))
-        t2m  = raw_h[adep].get("t2m",  np.full(len(h_times), np.nan))
-        d2m  = raw_h[adep].get("d2m",  np.full(len(h_times), np.nan))
-        msl  = raw_h[adep].get("msl",  np.full(len(h_times), np.nan))
-        lcc  = raw_h[adep].get("lcc",  np.full(len(h_times), np.nan))
-        cape = raw_h[adep].get("cape", np.full(len(h_times), np.nan))
+        u10  = raw_h[icao].get("u10",  np.zeros(len(h_times)))
+        v10  = raw_h[icao].get("v10",  np.zeros(len(h_times)))
+        t2m  = raw_h[icao].get("t2m",  np.full(len(h_times), np.nan))
+        d2m  = raw_h[icao].get("d2m",  np.full(len(h_times), np.nan))
+        msl  = raw_h[icao].get("msl",  np.full(len(h_times), np.nan))
+        lcc  = raw_h[icao].get("lcc",  np.full(len(h_times), np.nan))
+        cape = raw_h[icao].get("cape", np.full(len(h_times), np.nan))
 
         wh = pd.DataFrame({
             "wind_speed_ms":   np.sqrt(u10**2 + v10**2),
@@ -217,13 +233,13 @@ for adep in unique_airports["ADEP"]:
         }, index=h_times)
 
         wa = pd.DataFrame({
-            "precip_mm":    raw_a[adep].get("tp",   np.zeros(len(a_times))) * 1000.0,
-            "snowfall_mm":  raw_a[adep].get("sf",   np.zeros(len(a_times))) * 1000.0,
-            "wind_gust_ms": raw_a[adep].get("fg10", np.zeros(len(a_times))),
-            "cloud_base_m": raw_a[adep].get("cbh",  np.full(len(a_times), np.nan)),
+            "precip_mm":    raw_a[icao].get("tp",   np.zeros(len(a_times))) * 1000.0,
+            "snowfall_mm":  raw_a[icao].get("sf",   np.zeros(len(a_times))) * 1000.0,
+            "wind_gust_ms": raw_a[icao].get("fg10", np.zeros(len(a_times))),
+            "cloud_base_m": raw_a[icao].get("cbh",  np.full(len(a_times), np.nan)),
         }, index=a_times)
 
-        airport_wx[adep] = wh.join(wa, how="left")
+        airport_wx[icao] = wh.join(wa, how="left")[WEATHER_COLS]
     except Exception as e:
         pass   # airport stays out of dict; flights get NaN weather
 
@@ -231,36 +247,32 @@ print(f"  Weather ready for {len(airport_wx)} / {len(unique_airports)} airports"
 
 
 
+def lookup_weather(df, code_col, hour_col, prefix):
+    """Nearest-hour weather for each row's airport → DataFrame of prefixed columns."""
+    out = np.full((len(df), len(WEATHER_COLS)), np.nan)
+    pos = pd.Series(np.arange(len(df)), index=df.index)
+    valid = df[[code_col, hour_col]].dropna()
+    for code, grp in valid.groupby(code_col):
+        wx = airport_wx.get(code)
+        if wx is None:
+            continue
+        idx = wx.index.get_indexer(grp[hour_col], method="nearest")
+        ok  = idx >= 0
+        out[pos[grp.index].to_numpy()[ok]] = wx.to_numpy()[idx[ok]]
+    return pd.DataFrame(out, index=df.index,
+                        columns=[f"{prefix}{c}" for c in WEATHER_COLS])
+
+
 print("\nJoining weather onto flights …")
-WEATHER_COLS = [
-    "wind_speed_ms", "temperature_c", "dewpoint_c", "pressure_hpa",
-    "low_cloud_frac", "cape_jkg", "precip_mm", "snowfall_mm",
-    "wind_gust_ms", "cloud_base_m",
-]
+dep_wx = lookup_weather(flights, "ADEP", "DEP_HOUR", "dep_")
+arr_wx = lookup_weather(flights, "ADES", "ARR_HOUR", "arr_")
 
-wx_rows = []
-for _, flight in flights.iterrows():
-    adep = flight["ADEP"]
-    t    = flight["DEP_HOUR"]
+result = pd.concat([flights.drop(columns=["DEP_HOUR", "ARR_HOUR"]), dep_wx, arr_wx], axis=1)
 
-    rec = {col: np.nan for col in WEATHER_COLS}
-    if adep in airport_wx:
-        wx  = airport_wx[adep]
-        idx = wx.index.get_indexer([t], method="nearest")[0]
-        if 0 <= idx < len(wx):
-            for col in WEATHER_COLS:
-                if col in wx.columns:
-                    rec[col] = wx.iloc[idx][col]
-
-    wx_rows.append(rec)
-
-wx_df  = pd.DataFrame(wx_rows, index=flights.index)
-result = pd.concat([flights.drop(columns=["DEP_HOUR"]), wx_df], axis=1)
-
-# How many rows have at least some weather?
-has_weather = result["wind_speed_ms"].notna().sum()
-print(f"  Flights with weather data: {has_weather:,} / {len(result):,} "
-      f"({100*has_weather/len(result):.1f} %)")
+for prefix, label in [("dep_", "departure"), ("arr_", "arrival")]:
+    n = result[f"{prefix}wind_speed_ms"].notna().sum()
+    print(f"  Flights with {label} weather: {n:,} / {len(result):,} "
+          f"({100*n/len(result):.1f} %)")
 
 
 
@@ -271,9 +283,11 @@ size_mb = result.memory_usage(deep=True).sum() / 1024**2
 print(f"\nDone.  Shape: {result.shape[0]:,} rows × {result.shape[1]} columns  "
       f"(~{size_mb:.0f} MB in memory)")
 print(f"\nWeather columns added:")
-for col in WEATHER_COLS:
-    present = col in result.columns and result[col].notna().any()
-    print(f"  {'✓' if present else '✗'}  {col}")
+for prefix in ["dep_", "arr_"]:
+    for col in WEATHER_COLS:
+        name = f"{prefix}{col}"
+        present = name in result.columns and result[name].notna().any()
+        print(f"  {'✓' if present else '✗'}  {name}")
 
 print(f"\nAll done — load the merged file with:")
 print(f"  df = pd.read_csv(r'{OUTPUT_PATH}')")
