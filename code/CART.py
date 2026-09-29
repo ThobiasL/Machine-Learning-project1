@@ -11,19 +11,30 @@ object_list = [["FILED OFF BLOCK TIME", "FILED ARRIVAL TIME", "ACTUAL OFF BLOCK 
                ["ADEP", "ADES", "AC Type", "AC Operator", "AC Registration", "ICAO Flight Type", "STATFOR Market Segment"]]
 
 # Dropping the index column
-dataset = dataset.drop(columns=[object_list[0][0],object_list[0][1]], axis=1)
+dataset = dataset.drop(columns=["ECTRL ID"], axis=1)
 
-# Converting the datetime object columns into datetime format
+# Converting the datetime object columns into different int columns
 for col in object_list[0]:
+    # Converting the datetime object columns into datetime format
     dataset[col] = pd.to_datetime(dataset[col], format="%Y-%m-%d %H:%M:%S", errors="coerce")
-    dataset[f"{col}_hour"] = dataset[col].dt.hour
     dataset[f"{col}_month"] = dataset[col].dt.month
     dataset[f"{col}_dayofweek"] = dataset[col].dt.dayofweek
+    dataset[f"{col}_hour"] = dataset[col].dt.hour
+    dataset[f"{col}_minute"] = dataset[col].dt.minute
 
-# Converting the datetime format columns into int format
+    # Creating new columns for month, day of week, hour, and minute
+    dataset[col + "_month"] = dataset[col].dt.month
+    dataset[col + "_dayofweek"] = dataset[col].dt.dayofweek
+    dataset[col + "_hour"] = dataset[col].dt.hour
+    dataset[col + "_minute"] = dataset[col].dt.minute
 
+# Converting the string object columns into int format
+
+
+dataset = dataset.drop(columns=object_list[0], axis=1)
 
 print(dataset.info())
+print(dataset.head())
 
 # Splitting the dataset into train 60%, validation 20%, and test 20%
 trainvalidation, test = train_test_split(dataset, test_size=0.2)
