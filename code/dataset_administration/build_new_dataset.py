@@ -141,15 +141,19 @@ unique_airports = (
 )
 print(f"  Unique airports (dep + arr): {len(unique_airports)}")
 
-# Drop airports outside the weather grid; their flights get NaN weather
+# Drop airports outside the weather grid, and every flight that uses one
 in_grid = (
     unique_airports["LAT"].between(max(h_lat.min(), a_lat.min()), min(h_lat.max(), a_lat.max()))
     & unique_airports["LON"].between(max(h_lon.min(), a_lon.min()), min(h_lon.max(), a_lon.max()))
 )
 oob = int((~in_grid).sum())
 unique_airports = unique_airports[in_grid].reset_index(drop=True)
-if oob:
-    print(f"  {oob} airports outside the weather grid extent — no weather assigned")
+grid_codes = set(unique_airports["ICAO"])
+n_before = len(flights)
+flights = flights[flights["ADEP"].isin(grid_codes) & flights["ADES"].isin(grid_codes)]
+print(f"  {oob} airports outside the weather grid extent — removed")
+print(f"  Flights removed (dep or arr outside grid / no coords): {n_before - len(flights):,}  "
+      f"→ {len(flights):,} remain")
 
 # Nearest grid indices for each airport
 h_li, h_lj, a_li, a_lj = {}, {}, {}, {}
