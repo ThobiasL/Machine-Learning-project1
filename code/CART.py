@@ -6,13 +6,20 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 dataset = pd.read_csv(r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\dataset\flights_weather_dataset.csv")
 
+# Cleaning the dataset
+object_list = [["FILED OFF BLOCK TIME", "FILED ARRIVAL TIME", "ACTUAL OFF BLOCK TIME", "ACTUAL ARRIVAL TIME"],
+               ["ADEP", "ADES", "AC Type", "AC Operator", "AC Registration", "ICAO Flight Type", "STATFOR Market Segment"]]
+
+dataset = dataset[object_list[0]].astype("int64")
+print(dataset.head())
+
 # Splitting the dataset into train 60%, validation 20%, and test 20%
 trainvalidation, test = train_test_split(dataset, test_size=0.2)
 train, validation = train_test_split(trainvalidation, test_size=0.25)
 
 # Removing the target columns from the features and creating separate target datasets
 target = ["DEP_DELAY_MIN", "ARR_DELAY_MIN"]
-target_index = [dataset.columns.get_loc(col) for col in target]
+target_index = [18, 19]
 train_features = train.drop(train.columns[target_index], axis=1)
 train_target = train[target]
 validation_features = validation.drop(validation.columns[target_index], axis=1)
@@ -38,6 +45,7 @@ def validate(regressor):
     print('Validation results:')
     evaluate(regressor, validation_features, validation_target)
 
+#
 dt = DecisionTreeRegressor()
 dt.fit(train_features, train_target)
 
