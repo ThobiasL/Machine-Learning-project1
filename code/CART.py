@@ -6,6 +6,9 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 dataset = pd.read_csv(r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\dataset\flights_weather_dataset.csv")
 
+# Dropping the index column
+dataset = dataset.drop(columns=[0,1,4])
+
 # Cleaning the dataset
 object_list = [["FILED OFF BLOCK TIME", "FILED ARRIVAL TIME", "ACTUAL OFF BLOCK TIME", "ACTUAL ARRIVAL TIME"],
                ["ADEP", "ADES", "AC Type", "AC Operator", "AC Registration", "ICAO Flight Type", "STATFOR Market Segment"]]
@@ -14,10 +17,11 @@ object_list = [["FILED OFF BLOCK TIME", "FILED ARRIVAL TIME", "ACTUAL OFF BLOCK 
 for col in object_list[0]:
     dataset[col] = pd.to_datetime(dataset[col], format="%Y-%m-%d %H:%M:%S", errors="coerce")
     dataset[f"{col}_hour"] = dataset[col].dt.hour
-    dataset[f"{col}_dayofweek"] = dataset[col].dt.dayofweek
     dataset[f"{col}_month"] = dataset[col].dt.month
+    dataset[f"{col}_dayofweek"] = dataset[col].dt.dayofweek
 
 # Converting the datetime format columns into int format
+
 
 print(dataset.info())
 
