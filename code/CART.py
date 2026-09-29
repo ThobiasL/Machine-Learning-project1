@@ -17,10 +17,13 @@ dataset = dataset.drop(columns=["ECTRL ID"], axis=1)
 for col in object_list[0]:
     # Converting the datetime object columns into datetime format
     dataset[col] = pd.to_datetime(dataset[col], format="%Y-%m-%d %H:%M:%S", errors="coerce")
+    dataset[f"{col}_year"] = dataset[col].dt.year
     dataset[f"{col}_month"] = dataset[col].dt.month
+    dataset[f"{col}_day"] = dataset[col].dt.day
     dataset[f"{col}_dayofweek"] = dataset[col].dt.dayofweek
     dataset[f"{col}_hour"] = dataset[col].dt.hour
     dataset[f"{col}_minute"] = dataset[col].dt.minute
+    dataset[f"{col}_second"] = dataset[col].dt.second
 
     # Creating new columns for month, day of week, hour, and minute
     dataset[col + "_month"] = dataset[col].dt.month
