@@ -8,7 +8,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 dataset = pd.read_csv(r"C:\Users\Gruppe3\Desktop\Machine-Learning-project1\dataset\flights_weather_dataset.csv")
 
 # Cleaning the dataset
-object_list = [["ECTRL ID", "ADEP", "ADES", "AC Registration", "ACTUAL OFF BLOCK TIME" , "ACTUAL ARRIVAL TIME"],
+object_list = [["ECTRL ID", "ADEP", "ADES", "AC Registration", "ACTUAL OFF BLOCK TIME" , "ACTUAL ARRIVAL TIME", "Actual Distance Flown (nm)"],
                ["FILED OFF BLOCK TIME", "FILED ARRIVAL TIME"],
                ["AC Type", "AC Operator", "ICAO Flight Type", "STATFOR Market Segment"]]
 
@@ -72,13 +72,14 @@ def validate(regressor):
     evaluate(regressor, validation_features, validation_target)
 
 #
-dt = DecisionTreeRegressor()
+dt = DecisionTreeRegressor(ccp_alpha=0.01)
 dt.fit(train_features, train_target)
 
 validate(dt)
 print("-"*30)
 print("Testing results:")
 evaluate(dt, test_features, test_target)
+print("-"*30)
 
 # Showing the top 10 most important features for the model
 importances = pd.Series(dt.feature_importances_, index=train_features.columns)
