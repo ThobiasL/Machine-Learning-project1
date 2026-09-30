@@ -71,7 +71,7 @@ def validate(regressor):
     evaluate(regressor, validation_features, validation_target)
 
 #
-dt = DecisionTreeRegressor(ccp_alpha=0.01)
+dt = DecisionTreeRegressor(min_samples_leaf=100)
 dt.fit(train_features, train_target)
 
 validate(dt)
