@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OrdinalEncoder
 from sklearn.tree import DecisionTreeRegressor
@@ -71,7 +70,7 @@ def validate(regressor):
     print('Validation results:')
     evaluate(regressor, validation_features, validation_target)
 
-#
+# Training and fitting the Decision Tree Regressor model
 dt = DecisionTreeRegressor()
 dt.fit(train_features, train_target)
 
