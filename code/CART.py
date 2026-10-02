@@ -37,20 +37,6 @@ encoder = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
 for col in object_list[2]:
     dataset[col] = encoder.fit_transform(dataset[[col]])
 
-# Splitting the dataset into train 60%, validation 20%, and test 20%
-trainvalidation, test = train_test_split(dataset, test_size=0.2)
-train, validation = train_test_split(trainvalidation, test_size=0.25)
-
-# Removing the target columns from the features and creating separate target datasets
-target = ["DEP_DELAY_MIN", "ARR_DELAY_MIN"]
-target_index = [dataset.columns.get_loc(col) for col in target]
-train_features = train.drop(train.columns[target_index], axis=1)
-train_target = train[target]
-validation_features = validation.drop(validation.columns[target_index], axis=1)
-validation_target = validation[target]
-test_features = test.drop(test.columns[target_index], axis=1)
-test_target = test[target]
-
 # Evaluation module and printing results
 def evaluate(regressor, features, targets):
     predictions = regressor.predict(features)
@@ -70,7 +56,22 @@ def validate(regressor):
     print('Validation results:')
     evaluate(regressor, validation_features, validation_target)
 
-#
+
+# Splitting the dataset into train 60%, validation 20%, and test 20%
+trainvalidation, test = train_test_split(dataset, test_size=0.2)
+train, validation = train_test_split(trainvalidation, test_size=0.25)
+
+# Removing the target columns from the features and creating separate target datasets
+target = ["DEP_DELAY_MIN", "ARR_DELAY_MIN"]
+target_index = [dataset.columns.get_loc(col) for col in target]
+train_features = train.drop(train.columns[target_index], axis=1)
+train_target = train[target]
+validation_features = validation.drop(validation.columns[target_index], axis=1)
+validation_target = validation[target]
+test_features = test.drop(test.columns[target_index], axis=1)
+test_target = test[target]
+
+# Training the Decision Tree Regressor model with a minimum of 100 samples per leaf to reduce overfitting and improve generalization
 dt = DecisionTreeRegressor(min_samples_leaf=100)
 dt.fit(train_features, train_target)
 
