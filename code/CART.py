@@ -18,11 +18,6 @@ dataset = dataset.drop(columns=object_list[0], axis=1)
 for col in object_list[1]:
     # Converting the datetime object columns into datetime format
     dataset[col] = pd.to_datetime(dataset[col], format="%Y-%m-%d %H:%M:%S", errors="coerce")
-    dataset[f"{col}_month"] = dataset[col].dt.month
-    dataset[f"{col}_dayofweek"] = dataset[col].dt.dayofweek
-    dataset[f"{col}_hour"] = dataset[col].dt.hour
-    dataset[f"{col}_minute"] = dataset[col].dt.minute
-
     # Creating new columns for month, day of week, hour, and minute
     dataset[col + "_month"] = dataset[col].dt.month
     dataset[col + "_dayofweek"] = dataset[col].dt.dayofweek
