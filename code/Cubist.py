@@ -48,7 +48,7 @@ x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 cross_validation = KFold(n_splits=3, shuffle=True)
 
 # Performing cross-validation using Cubist
-validation_results = cross_validate(MultiOutputRegressor(cubist.Cubist(neighbors=2)), x_train, y_train, cv=cross_validation,
+validation_results = cross_validate(MultiOutputRegressor(cubist.Cubist(n_rules=550)), x_train, y_train, cv=cross_validation,
                                      scoring=['neg_mean_absolute_error', 'neg_mean_squared_error', 'r2'],
                                      return_train_score=True, n_jobs=-1)
 
