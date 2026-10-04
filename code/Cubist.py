@@ -39,16 +39,16 @@ target = ["DEP_DELAY_MIN", "ARR_DELAY_MIN"]
 x = dataset.drop(columns=target, axis=1)
 y = dataset[target]
 
-x = x.sample(n=100_000, random_state=42)
-y = y.loc[x.index]
-
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
 # Setting up K for the flods in the cross-validation
 cross_validation = KFold(n_splits=3, shuffle=True)
 
+# Setting up the Cubist model with specified hyperparameters
+model = MultiOutputRegressor(cubist.Cubist(n_committees=9, neighbors=9, n_rules=400, unbiased=True))
+
 # Performing cross-validation using Cubist
-validation_results = cross_validate(MultiOutputRegressor(cubist.Cubist(n_rules=550)), x_train, y_train, cv=cross_validation,
+validation_results = cross_validate(model, x_train, y_train, cv=cross_validation,
                                      scoring=['neg_mean_absolute_error', 'neg_mean_squared_error', 'r2'],
                                      return_train_score=True, n_jobs=-1)
 
@@ -58,8 +58,20 @@ print("Cross-validation results:")
 print(f"Mean Absolute Error: {-validation_result['test_neg_mean_absolute_error']:.2f}")
 print(f"Mean Squared Error: {-validation_result['test_neg_mean_squared_error']:.2f}")
 print(f"R^2 Score: {validation_result['test_r2']:.2f}")
+print("-"*30)
 
 # Training the model using Cubist
-#test_results = validation_results.fit(x_train, y_train)
-#print(test_results)
+model.fit(x_train, y_train)
 
+test_predictions = model.predict(x_test)
+
+# Evaluating the model using the test dataset
+mae = mean_absolute_error(y_test, test_predictions)
+mse = mean_squared_error(y_test, test_predictions)
+r2 = r2_score(y_test, test_predictions)
+
+# Printing the results of the evaluation
+print("Test results:")
+print(f"Mean Absolute Error: {mae:.2f}")
+print(f"Mean Squared Error: {mse:.2f}")
+print(f"R^2 Score: {r2:.2f}")
