@@ -42,15 +42,15 @@ y = dataset[target]
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
 # Setting up K for the flods in the cross-validation
-cross_validation = KFold(n_splits=3, shuffle=True)
+cross_validation = KFold(n_splits=9, shuffle=True)
 
 # Setting up the Cubist model with specified hyperparameters
-model = MultiOutputRegressor(cubist.Cubist(n_committees=9, neighbors=9, n_rules=400, unbiased=True))
+model = MultiOutputRegressor(cubist.Cubist(n_committees=9, n_rules=450, unbiased=True))
 
 # Performing cross-validation using Cubist
 validation_results = cross_validate(model, x_train, y_train, cv=cross_validation,
                                      scoring=['neg_mean_absolute_error', 'neg_mean_squared_error', 'r2'],
-                                     return_train_score=True, n_jobs=-1)
+                                     n_jobs=-1)
 
 # Printing the results of the cross-validation
 validation_result = pd.DataFrame(validation_results).mean()
@@ -59,6 +59,7 @@ print(f"Mean Absolute Error: {-validation_result['test_neg_mean_absolute_error']
 print(f"Mean Squared Error: {-validation_result['test_neg_mean_squared_error']:.2f}")
 print(f"R^2 Score: {validation_result['test_r2']:.2f}")
 print("-"*30)
+
 
 # Training the model using Cubist
 model.fit(x_train, y_train)
