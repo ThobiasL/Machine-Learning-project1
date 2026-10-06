@@ -1,5 +1,5 @@
 import pandas as pd
-import xgboost as xgb
+from xgboost import XGBRegressor
 from sklearn.model_selection import train_test_split, KFold, cross_validate
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.preprocessing import OrdinalEncoder
@@ -32,18 +32,19 @@ encoder = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
 for col in object_list[2]:
     dataset[col] = encoder.fit_transform(dataset[[col]])
 
-# Splitting the dataset into train 80% and test 20%
+# removing the target columns from the features and creating separate target  variable
 target = ["DEP_DELAY_MIN", "ARR_DELAY_MIN"]
 x = dataset.drop(columns=target, axis=1)
 y = dataset[target]
 
+# Splitting the dataset into train 80% and test 20%
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
 # Setting up K for the folds in the cross-validation
-cross_validation = KFold(n_splits=3, shuffle=True)
+cross_validation = KFold(n_splits=9, shuffle=True)
 
 # Setting up the XGBoost model with specified hyperparameters
-model = xgb.XGBRegressor()
+model = XGBRegressor(learning_rate=0.2 , max_depth=11, colsample_bytree=0.9, n_estimators=500)
 
 # Performing cross-validation using XGBoost
 validation_results = cross_validate(model, x_train, y_train, cv=cross_validation,
