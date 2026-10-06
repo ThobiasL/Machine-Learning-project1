@@ -59,7 +59,7 @@ print(f"Mean Squared Error: {-validation_result['test_neg_mean_squared_error']:.
 print(f"R^2 Score: {validation_result['test_r2']:.2f}")
 print("-"*30)
 
-'''
+
 # Fitting the model on the training data
 model.fit(x_train, y_train)
 
@@ -74,4 +74,3 @@ print("Test results:")
 print(f"Mean Absolute Error: {mae:.2f}")
 print(f"Mean Squared Error: {mse:.2f}")
 print(f"R^2 Score: {r2:.2f}")
-'''
